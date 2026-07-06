@@ -93,6 +93,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "theme-color", content: "#0a0a0a" },
+      { name: "twitter:title", content: "Wayline — Wayfinding for public space" },
+      { name: "description", content: "Wayline is a wayfinding studio. We plan how people move through airports, stations and precincts — then design, make and install the signage that guides them." },
+      { property: "og:description", content: "Wayline is a wayfinding studio. We plan how people move through airports, stations and precincts — then design, make and install the signage that guides them." },
+      { name: "twitter:description", content: "Wayline is a wayfinding studio. We plan how people move through airports, stations and precincts — then design, make and install the signage that guides them." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/7c3eac9e-278e-4721-a563-b6d08cba74cb/id-preview-1756a452--dcaa9999-cb7d-4912-89ea-1282d7488514.lovable.app-1783273332092.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/7c3eac9e-278e-4721-a563-b6d08cba74cb/id-preview-1756a452--dcaa9999-cb7d-4912-89ea-1282d7488514.lovable.app-1783273332092.png" },
     ],
     links: [
       {
