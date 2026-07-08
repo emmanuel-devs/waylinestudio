@@ -1,8 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { POSTS_QUERY, sanity, type SanityPost } from "@/lib/sanity";
+import { fetchPublishedPosts } from "@/lib/content";
 
-function formatDate(iso?: string) {
+function formatDate(iso?: string | null) {
   if (!iso) return "—";
   const d = new Date(iso);
   return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, "0")}.${String(d.getDate()).padStart(2, "0")}`;
@@ -10,8 +10,8 @@ function formatDate(iso?: string) {
 
 export function Journal() {
   const { data: posts = [], isLoading } = useQuery({
-    queryKey: ["posts"],
-    queryFn: () => sanity.fetch<SanityPost[]>(POSTS_QUERY),
+    queryKey: ["public-posts"],
+    queryFn: fetchPublishedPosts,
   });
 
   return (
@@ -27,22 +27,21 @@ export function Journal() {
             </h2>
           </div>
         </div>
-
         {isLoading ? (
-          <p className="font-mono text-[11px] tracking-[0.22em] uppercase text-muted-foreground">
-            Loading entries…
-          </p>
+          <p className="font-mono text-[11px] tracking-[0.22em] uppercase text-muted-foreground">Loading entries…</p>
+        ) : posts.length === 0 ? (
+          <p className="font-mono text-[11px] tracking-[0.22em] uppercase text-muted-foreground">No entries published yet.</p>
         ) : (
           <ul className="divide-y divide-hairline border-y border-hairline">
             {posts.map((p) => (
-              <li key={p._id}>
+              <li key={p.id}>
                 <Link
                   to="/journal/$slug"
-                  params={{ slug: p.slug.current }}
+                  params={{ slug: p.slug }}
                   className="group grid grid-cols-1 items-baseline gap-4 py-8 md:grid-cols-[120px_140px_1fr_80px] md:gap-8"
                 >
                   <span className="font-mono text-[11px] tracking-[0.18em] uppercase text-muted-foreground tabular-nums">
-                    {formatDate(p.publishedAt)}
+                    {formatDate(p.published_at)}
                   </span>
                   <span className="font-mono text-[11px] tracking-[0.18em] uppercase text-accent">
                     {p.category ?? "Note"}
@@ -52,9 +51,7 @@ export function Journal() {
                       {p.title}
                     </h3>
                     {p.excerpt ? (
-                      <p className="mt-2 max-w-xl text-sm leading-relaxed text-muted-foreground">
-                        {p.excerpt}
-                      </p>
+                      <p className="mt-2 max-w-xl text-sm leading-relaxed text-muted-foreground">{p.excerpt}</p>
                     ) : null}
                   </div>
                   <span className="justify-self-start font-mono text-[11px] tracking-[0.18em] uppercase text-muted-foreground md:justify-self-end">

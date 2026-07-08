@@ -1,11 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import {
-  PROJECTS_QUERY,
-  sanity,
-  urlFor,
-  type SanityProject,
-} from "@/lib/sanity";
+import { fetchPublishedProjects, mediaUrl, type Project } from "@/lib/content";
 
 const SPANS = ["md:col-span-8", "md:col-span-4", "md:col-span-5", "md:col-span-7"];
 
@@ -40,56 +35,40 @@ function WireframeCover({ n }: { n: string }) {
   );
 }
 
-function ProjectTile({ p, index }: { p: SanityProject; index: number }) {
+function ProjectTile({ p, index }: { p: Project; index: number }) {
   const n = String(index + 1).padStart(2, "0");
   const span = SPANS[index % SPANS.length];
-  const coverUrl = p.cover ? urlFor(p.cover).width(1200).height(900).fit("crop").auto("format").url() : null;
+  const coverUrl = mediaUrl(p.cover_image);
 
   return (
     <article className={`group relative ${span} border-hairline hover:border-accent/50 transition-colors`}>
-      <Link
-        to="/projects/$slug"
-        params={{ slug: p.slug.current }}
-        className="block"
-      >
+      <Link to="/projects/$slug" params={{ slug: p.slug }} className="block">
         <div className="relative aspect-[4/3] w-full overflow-hidden border border-hairline bg-surface">
           {coverUrl ? (
-            <img
-              src={coverUrl}
-              alt={p.title}
-              loading="lazy"
-              className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
-            />
+            <img src={coverUrl} alt={p.title} loading="lazy"
+              className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.03]" />
           ) : (
             <WireframeCover n={n} />
           )}
           <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-background/90 to-transparent p-6 opacity-0 transition-opacity duration-500 group-hover:opacity-100">
-            <p className="font-mono text-[10px] tracking-[0.22em] uppercase text-accent">
-              View case study →
-            </p>
+            <p className="font-mono text-[10px] tracking-[0.22em] uppercase text-accent">View case study →</p>
           </div>
         </div>
-
         <div className="mt-5 flex items-start justify-between gap-6">
           <div>
             <p className="font-mono text-[11px] tracking-[0.22em] uppercase text-muted-foreground">
               {n} / {p.client ?? "Confidential"}
             </p>
-            <h3 className="mt-2 font-display text-xl leading-[1.15] tracking-[-0.02em] md:text-2xl">
-              {p.title}
-            </h3>
+            <h3 className="mt-2 font-display text-xl leading-[1.15] tracking-[-0.02em] md:text-2xl">{p.title}</h3>
           </div>
           <div className="shrink-0 text-right font-mono text-[11px] tracking-[0.18em] uppercase text-muted-foreground">
-            {p.year ?? "—"}
-            <br />
+            {p.year ?? "—"}<br />
             <span className="text-foreground/60">{p.location ?? ""}</span>
           </div>
         </div>
         {p.disciplines?.length ? (
           <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 font-mono text-[10px] tracking-[0.18em] uppercase text-muted-foreground/80">
-            {p.disciplines.map((d) => (
-              <span key={d}>— {d}</span>
-            ))}
+            {p.disciplines.map((d) => <span key={d}>— {d}</span>)}
           </div>
         ) : null}
       </Link>
@@ -99,8 +78,8 @@ function ProjectTile({ p, index }: { p: SanityProject; index: number }) {
 
 export function Projects() {
   const { data: projects = [], isLoading } = useQuery({
-    queryKey: ["projects"],
-    queryFn: () => sanity.fetch<SanityProject[]>(PROJECTS_QUERY),
+    queryKey: ["public-projects"],
+    queryFn: fetchPublishedProjects,
   });
 
   return (
@@ -116,16 +95,13 @@ export function Projects() {
             </h2>
           </div>
         </div>
-
         {isLoading ? (
-          <p className="font-mono text-[11px] tracking-[0.22em] uppercase text-muted-foreground">
-            Loading index…
-          </p>
+          <p className="font-mono text-[11px] tracking-[0.22em] uppercase text-muted-foreground">Loading index…</p>
+        ) : projects.length === 0 ? (
+          <p className="font-mono text-[11px] tracking-[0.22em] uppercase text-muted-foreground">No projects published yet.</p>
         ) : (
           <div className="grid grid-cols-1 gap-12 md:grid-cols-12 md:gap-x-8 md:gap-y-24">
-            {projects.map((p, i) => (
-              <ProjectTile key={p._id} p={p} index={i} />
-            ))}
+            {projects.map((p, i) => <ProjectTile key={p.id} p={p} index={i} />)}
           </div>
         )}
       </div>
