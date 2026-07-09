@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,10 +30,23 @@ export function PostForm({ post }: Props) {
 
   async function save(e: React.FormEvent) {
     e.preventDefault();
+    if (!form.title.trim()) return toast.error("Title is required");
     setSaving(true);
+    const finalSlug = (form.slug.trim() || slugify(form.title)).slice(0, 100);
+
+    const { data: conflict } = await supabase
+      .from("posts")
+      .select("id")
+      .eq("slug", finalSlug)
+      .maybeSingle();
+    if (conflict && conflict.id !== post?.id) {
+      setSaving(false);
+      return toast.error(`Slug "${finalSlug}" is already used by another post.`);
+    }
+
     const payload = {
       title: form.title.trim(),
-      slug: (form.slug.trim() || slugify(form.title)).slice(0, 100),
+      slug: finalSlug,
       published_at: form.published_at ? new Date(form.published_at).toISOString() : null,
       category: form.category.trim() || null,
       excerpt: form.excerpt.trim() || null,
@@ -44,7 +58,8 @@ export function PostForm({ post }: Props) {
       ? await supabase.from("posts").update(payload).eq("id", post.id)
       : await supabase.from("posts").insert(payload);
     setSaving(false);
-    if (res.error) return alert(res.error.message);
+    if (res.error) return toast.error(res.error.message);
+    toast.success(post ? "Post updated" : "Post created");
     navigate({ to: "/admin/posts" });
   }
 
