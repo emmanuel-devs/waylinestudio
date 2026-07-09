@@ -72,7 +72,7 @@ function PostsList() {
               <Button variant="ghost" size="sm" asChild>
                 <Link to="/admin/posts/$id" params={{ id: p.id }}>Edit</Link>
               </Button>
-              <Button variant="ghost" size="sm" onClick={() => del(p.id)}>Delete</Button>
+              <Button variant="ghost" size="sm" onClick={() => del(p)}>Delete</Button>
             </div>
           ))}
         </div>
