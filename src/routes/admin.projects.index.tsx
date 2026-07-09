@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import type { Project } from "@/lib/content";
@@ -23,14 +24,18 @@ function ProjectsList() {
     },
   });
 
-  async function del(id: string) {
-    if (!confirm("Delete this project? This can't be undone.")) return;
-    await supabase.from("projects").delete().eq("id", id);
+  async function del(p: Project) {
+    if (!confirm(`Delete "${p.title}"? This can't be undone.`)) return;
+    const { error } = await supabase.from("projects").delete().eq("id", p.id);
+    if (error) return toast.error(error.message);
+    toast.success("Project deleted");
     qc.invalidateQueries({ queryKey: ["admin-projects"] });
   }
 
   async function togglePublish(p: Project) {
-    await supabase.from("projects").update({ published: !p.published }).eq("id", p.id);
+    const { error } = await supabase.from("projects").update({ published: !p.published }).eq("id", p.id);
+    if (error) return toast.error(error.message);
+    toast.success(p.published ? "Unpublished" : "Published");
     qc.invalidateQueries({ queryKey: ["admin-projects"] });
   }
 
@@ -66,7 +71,7 @@ function ProjectsList() {
               <Button variant="ghost" size="sm" asChild>
                 <Link to="/admin/projects/$id" params={{ id: p.id }}>Edit</Link>
               </Button>
-              <Button variant="ghost" size="sm" onClick={() => del(p.id)}>Delete</Button>
+              <Button variant="ghost" size="sm" onClick={() => del(p)}>Delete</Button>
             </div>
           ))}
         </div>

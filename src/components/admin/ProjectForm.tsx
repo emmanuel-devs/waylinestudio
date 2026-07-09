@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,10 +36,24 @@ export function ProjectForm({ project }: Props) {
 
   async function save(e: React.FormEvent) {
     e.preventDefault();
+    if (!form.title.trim()) return toast.error("Title is required");
     setSaving(true);
+    const finalSlug = (form.slug.trim() || slugify(form.title)).slice(0, 100);
+
+    // Slug uniqueness check
+    const { data: conflict } = await supabase
+      .from("projects")
+      .select("id")
+      .eq("slug", finalSlug)
+      .maybeSingle();
+    if (conflict && conflict.id !== project?.id) {
+      setSaving(false);
+      return toast.error(`Slug "${finalSlug}" is already used by another project.`);
+    }
+
     const payload = {
       title: form.title.trim(),
-      slug: (form.slug.trim() || slugify(form.title)).slice(0, 100),
+      slug: finalSlug,
       client: form.client.trim() || null,
       location: form.location.trim() || null,
       year: form.year.trim() || null,
@@ -55,7 +70,8 @@ export function ProjectForm({ project }: Props) {
       ? await supabase.from("projects").update(payload).eq("id", project.id)
       : await supabase.from("projects").insert(payload);
     setSaving(false);
-    if (res.error) return alert(res.error.message);
+    if (res.error) return toast.error(res.error.message);
+    toast.success(project ? "Project updated" : "Project created");
     navigate({ to: "/admin/projects" });
   }
 

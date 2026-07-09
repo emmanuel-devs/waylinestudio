@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import type { Post } from "@/lib/content";
@@ -23,16 +24,20 @@ function PostsList() {
     },
   });
 
-  async function del(id: string) {
-    if (!confirm("Delete this post?")) return;
-    await supabase.from("posts").delete().eq("id", id);
+  async function del(p: Post) {
+    if (!confirm(`Delete "${p.title}"?`)) return;
+    const { error } = await supabase.from("posts").delete().eq("id", p.id);
+    if (error) return toast.error(error.message);
+    toast.success("Post deleted");
     qc.invalidateQueries({ queryKey: ["admin-posts"] });
   }
 
   async function togglePublish(p: Post) {
     const patch: Partial<Post> = { published: !p.published };
     if (!p.published && !p.published_at) patch.published_at = new Date().toISOString();
-    await supabase.from("posts").update(patch).eq("id", p.id);
+    const { error } = await supabase.from("posts").update(patch).eq("id", p.id);
+    if (error) return toast.error(error.message);
+    toast.success(p.published ? "Unpublished" : "Published");
     qc.invalidateQueries({ queryKey: ["admin-posts"] });
   }
 
@@ -67,7 +72,7 @@ function PostsList() {
               <Button variant="ghost" size="sm" asChild>
                 <Link to="/admin/posts/$id" params={{ id: p.id }}>Edit</Link>
               </Button>
-              <Button variant="ghost" size="sm" onClick={() => del(p.id)}>Delete</Button>
+              <Button variant="ghost" size="sm" onClick={() => del(p)}>Delete</Button>
             </div>
           ))}
         </div>
