@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import type { Project } from "@/lib/content";
 
-export const Route = createFileRoute("/admin/projects")({
+export const Route = createFileRoute("/admin/projects/")({
   component: ProjectsList,
 });
 
